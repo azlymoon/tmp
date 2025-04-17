@@ -1,0 +1,30 @@
+{
+    "model": {
+      "type": "catboost",
+      "params": {
+        "iterations": 500,
+        "depth": 6,
+        "learning_rate": 0.1,
+        "loss_function": "MultiClass",
+        "verbose": 50
+      }
+    },
+    "attacks": [
+
+        {
+            "type": "brendelbethge",
+            "params": {
+              "epsilon": 0.1,
+              "max_iter": 50,
+              "batch_size": 1,
+              "targeted": false,
+              "verbose": true
+          }
+        }
+      ],
+    "dataset": {
+          "type": "csv",
+          "path": "data/iris.csv",
+          "target": "species"
+    }
+}

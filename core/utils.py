@@ -1,7 +1,13 @@
 import json
+import logging
 
 
-def load_config(file_path="test_config_catboost.json"):
+def setup_logging():
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s [%(levelname)s] %(message)s")
+
+
+def load_config(file_path):
     """
     Loads the configuration from the specified JSON file.
 

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from art.attacks.attack import Attack
 
 class BaseAttack(ABC):
     """
@@ -7,5 +6,5 @@ class BaseAttack(ABC):
     """
 
     @abstractmethod
-    def execute(self, **kwargs):
+    def generate(self, X, y=None):
         pass

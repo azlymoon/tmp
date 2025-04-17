@@ -5,7 +5,7 @@ class ModelFactory:
     def create_model(model_config):
         model_type = model_config.get("type")
         params = model_config.get("params", {})
-        module_name = f"core.models.{model_type}" #abs_art_tabular.
+        module_name = f"core.models.{model_type}_model" #abs_art_tabular.
         class_name = "".join(word.capitalize() for word in model_type.split('_')) + "Model"
         try:
             module = importlib.import_module(module_name)

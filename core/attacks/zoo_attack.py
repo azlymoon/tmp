@@ -1,13 +1,12 @@
-from core.interfaces.BaseAttack import BaseAttack #abs_art_tabular.
-import art
+from core.interfaces.base_attack import BaseAttack
+from art.attacks.evasion import ZooAttack as ArtZooAttack
 
 
 class ZooAttack(BaseAttack):
     def __init__(self, classifier, **params):
-        print(params)
-        print(type(classifier))
-        self.attack = art.attacks.evasion.zoo.ZooAttack(classifier=classifier, **params)
+        self.classifier = classifier
+        self.params = params
+        self.attack = ArtZooAttack(classifier=self.classifier, **self.params)
 
-
-    def execute(self, x_train, _):
-        return self.attack.generate(x=x_train)
+    def generate(self, X, y=None):
+        return self.attack.generate(x=X)

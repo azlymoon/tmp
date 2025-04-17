@@ -1,13 +1,12 @@
-from core.interfaces.BaseAttack import BaseAttack #abs_art_tabular.
-import art
+from core.interfaces.base_attack import BaseAttack
+from art.attacks.evasion import HopSkipJump as ArtHopSkipJump
 
 
 class HopskipjumpAttack(BaseAttack):
     def __init__(self, classifier, **params):
-        print(params)
-        print(type(classifier))
-        self.attack = art.attacks.evasion.hop_skip_jump.HopSkipJump(classifier=classifier, **params)
+        self.classifier = classifier
+        self.params = params
+        self.attack = ArtHopSkipJump(classifier=self.classifier, **self.params)
 
-
-    def execute(self, x_train, y_train):
-        return self.attack.generate(x=x_train, y=y_train)
+    def generate(self, X, y=None):
+        return self.attack.generate(x=X, y=y)

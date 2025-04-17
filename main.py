@@ -1,38 +1,54 @@
-from core.utils import load_config
-from core.factories.model_factory import ModelFactory
-from core.factories.attack_factory import AttackFactory
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+import argparse
 import numpy as np
+import logging
+import sys
+
+from core.utils import setup_logging, load_config
+from core.factories import model_factory, attack_factory, data_factory
 
 def main():
-    config = load_config()
+    setup_logging()
+    logger = logging.getLogger(__name__)
 
-    model_config = config.get("model")
-    model = ModelFactory.create_model(model_config)
+    parser = argparse.ArgumentParser(description="ART Project Pipeline")
+    parser.add_argument('-c', '--config', dest='config_path', required=True,
+                        help='Path to the JSON configuration file')
+    args = parser.parse_args()
 
-    data = load_iris()
-    X = data.data
-    y = data.target
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    config = load_config(args.config_path)
 
-    model.build(x_train=X_train, y_train=y_train)
+    try:
+        data = data_factory.DataFactory.load_dataset(config.get("dataset"))
+        X = data.data
+        y = data.target
+    except Exception as e:
+        logger.error(f"Error loading dataset: {e}")
+        sys.exit(1)
+
+    try:
+        model_cls = model_factory.ModelFactory.create_model(config.get("model"))
+        art_model = model_cls.build(X, y)
+    except Exception as e:
+        logger.error(f"Error creating model: {e}")
+        sys.exit(1)
 
     attacks = config.get("attacks", [])
-    for attack_conf in attacks:
-        attack = AttackFactory.create_attack(model.art_model, attack_conf)
+    for attack_config in attacks:
+        try:
+            attack = attack_factory.AttackFactory.create_attack(art_model, attack_config)
+        except Exception as e:
+            logger.error(f"Error creating attack: {e}")
+            sys.exit(1)
 
-        print(f"Выполнение атаки: {attack_conf['type']} с параметрами: {attack_conf.get('params')}")
-        attack_result = attack.execute(X_test, y_test)
-
-        print("Результат атаки:")
-        preds_clean = np.argmax(model.art_model.predict(X_test), axis=1)
-        preds_adv = np.argmax(model.art_model.predict(attack_result), axis=1)
-        acc_clean = np.mean(preds_clean == y_test)
-        acc_adv = np.mean(preds_adv == y_test)
-        print("Точность на оригинальных данных: {:.2f}%".format(acc_clean * 100))
-        print("Точность на атакованных данных: {:.2f}%".format(acc_adv * 100))
-
+        try:
+            original_predict = np.argmax(art_model.predict(X), axis=1)
+            attacked_X = attack.generate(X, y)
+            attacked_predict = np.argmax(art_model.predict(attacked_X), axis=1)
+            logger.info("Original accuracy: {:.2f}%".format(np.mean(original_predict == y) * 100))
+            logger.info("Attacked accuracy: {:.2f}%".format(np.mean(attacked_predict == y) * 100))
+        except Exception as e:
+            logger.error(f"Error during attack execution: {e}")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
